@@ -90,7 +90,7 @@ class HX711
 		void set_smoothing_factor(float factor = 1);
 
 		// get the current OFFSET
-		long get_smoothing_factor();
+		float get_smoothing_factor();
 
 		// puts the chip into power down mode
 		void power_down();

@@ -265,7 +265,7 @@ void HX711::set_smoothing_factor(float factor) {
 	SMOOTHING_FACTOR_1 = 1-factor;
 }
 
-long HX711::get_smoothing_factor() {
+float HX711::get_smoothing_factor() {
 	return SMOOTHING_FACTOR;
 }
 
