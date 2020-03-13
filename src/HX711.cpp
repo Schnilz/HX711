@@ -184,6 +184,15 @@ long HX711::read() {
 	return static_cast<long>(value);
 }
 
+bool HX711::update_if_ready() {
+	if(is_ready()) {
+		raw_value = read();
+		avrg_value = float(raw_value)*SMOOTHING_FACTOR + SMOOTHING_FACTOR_1*avrg_value;
+		return true;
+	}
+	return false;
+}
+
 void HX711::wait_ready(unsigned long delay_ms) {
 	// Wait for the chip to become ready.
 	// This is a blocking implementation and will
@@ -223,28 +232,16 @@ bool HX711::wait_ready_timeout(unsigned long timeout, unsigned long delay_ms) {
 	return false;
 }
 
-long HX711::read_average(byte times) {
-	long sum = 0;
-	for (byte i = 0; i < times; i++) {
-		sum += read();
-		// Probably will do no harm on AVR but will feed the Watchdog Timer (WDT) on ESP.
-		// https://github.com/bogde/HX711/issues/73
-		delay(0);
-	}
-	return sum / times;
+double HX711::get_value() {
+	return avrg_value - OFFSET;
 }
 
-double HX711::get_value(byte times) {
-	return read_average(times) - OFFSET;
+float HX711::get_units() {
+	return get_value() / SCALE;
 }
 
-float HX711::get_units(byte times) {
-	return get_value(times) / SCALE;
-}
-
-void HX711::tare(byte times) {
-	double sum = read_average(times);
-	set_offset(sum);
+void HX711::tare() {
+	set_offset(avrg_value);
 }
 
 void HX711::set_scale(float scale) {
@@ -255,12 +252,21 @@ float HX711::get_scale() {
 	return SCALE;
 }
 
-void HX711::set_offset(long offset) {
+void HX711::set_offset(float offset) {
 	OFFSET = offset;
 }
 
-long HX711::get_offset() {
+float HX711::get_offset() {
 	return OFFSET;
+}
+
+void HX711::set_smoothing_factor(float factor) {
+	SMOOTHING_FACTOR = factor;
+	SMOOTHING_FACTOR_1 = 1-factor;
+}
+
+long HX711::get_smoothing_factor() {
+	return SMOOTHING_FACTOR;
 }
 
 void HX711::power_down() {
